@@ -1,0 +1,26 @@
+[
+  {
+    "carro": "DMR950",
+    "cedula": "1070600371",
+    "nombre": "Nicolas",
+    "horario": "05:00",
+    "sector": "Sector2",
+    "maleta": true
+  },
+  {
+    "carro": "DMR950",
+    "cedula": "1070600371",
+    "nombre": "Nicolas",
+    "horario": "05:00",
+    "sector": "Sector2",
+    "maleta": true
+  },
+  {
+    "carro": "DMR950",
+    "cedula": "1070600371",
+    "nombre": "Nicolas",
+    "horario": "05:00",
+    "sector": "Sector2",
+    "maleta": true
+  }
+]

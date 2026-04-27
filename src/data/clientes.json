@@ -1,0 +1,37 @@
+[
+  {
+    "nombre": "Nicolas",
+    "cedula": "1070600371",
+    "celular": "3134550453",
+    "foto": "C:/Users/pc/Pictures/Screenshots/Captura de pantalla (1).png",
+    "maleta": true
+  },
+  {
+    "nombre": "Samuel Doll",
+    "cedula": "222222",
+    "celular": "313020423",
+    "foto": "C:/Users/pc/Pictures/Screenshots/Captura de pantalla (1).png",
+    "maleta": true
+  },
+  {
+    "nombre": "Santiago Morales",
+    "cedula": "22222",
+    "celular": "3333",
+    "foto": "C:/Users/pc/Pictures/Screenshots/Captura de pantalla (1).png",
+    "maleta": true
+  },
+  {
+    "nombre": "sAMYUE",
+    "cedula": "123",
+    "celular": "123",
+    "foto": "C:/Users/pc/Pictures/Screenshots/Captura de pantalla (1).png",
+    "maleta": false
+  },
+  {
+    "nombre": "Andres Mauricio",
+    "cedula": "111111",
+    "celular": "31334503",
+    "foto": "C:\\Users\\pc\\Pictures\\Screenshots\\Captura de pantalla (1).png",
+    "maleta": false
+  }
+]
