@@ -1,8 +1,7 @@
+import os
 import cv2
 import numpy as np
 from pdf2image import convert_from_path
-import tempfile
-import os
 from .image_processor import ImageProcessor
 from .barcode_reader import BarcodeReader
 
@@ -19,13 +18,16 @@ class OMRProcessor:
         for page_num, image in enumerate(images):
             image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
+            h, w = image_cv.shape[:2]
+            print(f"Pagina {page_num+1}: {w}x{h}")
+            
             student_id = self._extract_student_id(image_cv)
             
             if num_questions:
                 questions_per_page = self.config.QUESTIONS_PER_PAGE
                 start_q = page_num * questions_per_page + 1
                 end_q = min(start_q + questions_per_page - 1, num_questions)
-                responses = self._extract_responses(image_cv, start_q, end_q)
+                responses = self._extract_responses(image_cv, start_q, end_q, debug=True)
             else:
                 responses = self._extract_responses(image_cv)
             
@@ -63,53 +65,69 @@ class OMRProcessor:
         barcode_region = image[y:y+h, x:x+w]
         return self.barcode_reader.read_barcode(barcode_region)
     
-    def _extract_responses(self, image, start_q=1, end_q=None):
+    def _extract_responses(self, image, start_q=1, end_q=None, debug=False):
+        import numpy as np
+        import cv2
+        
         if end_q is None:
             end_q = self.config.QUESTIONS_PER_PAGE
         
-        gray = self.image_processor.convert_to_grayscale(image)
-        thresh = self.image_processor.threshold(gray, self.config.OMR_BLACK_THRESHOLD)
+        h, w = image.shape[:2]
+        gray = np.mean(image, axis=2)
         
-        reference_marks = self.image_processor.find_reference_marks(image)
+        scale_x = w / self.config.PAGE_WIDTH
+        scale_y = h / self.config.PAGE_HEIGHT
         
-        if len(reference_marks) >= 4:
-            image = self.image_processor.correct_perspective(image, reference_marks)
-            gray = self.image_processor.convert_to_grayscale(image)
-            thresh = self.image_processor.threshold(gray, self.config.OMR_BLACK_THRESHOLD)
+        total_responses = end_q - start_q + 1
         
-        responses = []
+        margin = 50
+        available_width = self.config.PAGE_WIDTH - (margin * 2)
+        max_cols = 3
+        col_width = available_width / max_cols
+        q_per_col = 25
+        cols_on_page = min(max_cols, (total_responses + q_per_col - 1) // q_per_col)
+        
+        responses = [''] * total_responses
         options = ['A', 'B', 'C', 'D']
         
-        x_start = self.config.MARGIN_LEFT + 30
-        y_start = self.config.MARGIN_TOP + 50
+        y_base = (self.config.PAGE_HEIGHT - self.config.MARGIN_TOP - 50) * scale_y
+        start_x = (margin + 20) * scale_x
+        gap_y = self.config.QUESTION_HEIGHT * scale_y
         
-        option_x_offset = [0, self.config.BUBBLE_SPACING, 
-                          self.config.BUBBLE_SPACING * 2, 
-                          self.config.BUBBLE_SPACING * 3]
+        option_x_offset = [
+            0, 
+            self.config.BUBBLE_SPACING * scale_x, 
+            self.config.BUBBLE_SPACING * 2 * scale_x, 
+            self.config.BUBBLE_SPACING * 3 * scale_x
+        ]
         
-        for q_num in range(start_q, end_q + 1):
-            y = y_start + (self.config.QUESTION_HEIGHT * (end_q - q_num))
+        for col in range(cols_on_page):
+            col_start = start_q + col * q_per_col
+            col_end = min(col_start + q_per_col, end_q + 1)
+            x_offset = (margin + col * col_width + 20) * scale_x
             
-            question_responses = []
-            
-            for idx, x_off in enumerate(option_x_offset):
-                x = x_start + x_off
-                r = self.config.BUBBLE_RADIUS
+            y = y_base
+            for q in range(col_start, col_end):
+                idx = q - start_q
+                if idx >= total_responses:
+                    break
+                best_opt = None
+                best_mean = 256
                 
-                bubble_region = self.image_processor.extract_bubble_region(
-                    thresh, x, y, r + 3
-                )
+                for i, opt in enumerate(options):
+                    x = start_x + x_offset - (margin * scale_x) + option_x_offset[i]
+                    roi = gray[max(0, int(y-10)):min(h, int(y+10)), 
+                               max(0, int(x-10)):min(w, int(x+10))]
+                    
+                    if roi.size > 0:
+                        mean = np.mean(roi)
+                        if mean < best_mean:
+                            best_mean = mean
+                            best_opt = opt
                 
-                fill_pct = self.image_processor.calculate_fill_percentage(bubble_region)
+                if best_mean < 250:
+                    responses[idx] = best_opt if best_opt else ''
                 
-                if fill_pct > self.config.OMR_THRESHOLD:
-                    question_responses.append(options[idx])
-            
-            if len(question_responses) == 1:
-                responses.append(question_responses[0])
-            elif len(question_responses) > 1:
-                responses.append('INVALID')
-            else:
-                responses.append('')
+                y -= gap_y
         
         return responses

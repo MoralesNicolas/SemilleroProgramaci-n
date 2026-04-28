@@ -17,7 +17,7 @@ class BarcodeGenerator:
             'text_distance': 3,
             'background': 'white',
             'foreground': 'black',
-            'write_text': True,
+            'write_text': False,
         })
         
         barcode = Code39(id_number, writer=writer, add_checksum=False)

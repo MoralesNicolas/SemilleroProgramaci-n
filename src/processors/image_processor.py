@@ -79,7 +79,7 @@ class ImageProcessor:
         if len(bubble_region.shape) == 3:
             bubble_region = cv2.cvtColor(bubble_region, cv2.COLOR_BGR2GRAY)
         
-        total_pixels = cv2.countNonZero(cv2.threshold(bubble_region, 127, 255, cv2.THRESH_BINARY)[1])
+        total_pixels = cv2.countNonZero(bubble_region)
         total_area = bubble_region.shape[0] * bubble_region.shape[1]
         
         if total_area == 0:
