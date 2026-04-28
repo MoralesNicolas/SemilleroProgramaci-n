@@ -21,7 +21,7 @@ class ICFESApp:
     
     def setup_page(self):
         self.page.title = "un orm pal semillero"
-        self.page.window.width = 500
+        self.page.window.width = 470
         self.page.window.height = 600
         self.page.theme_mode = ft.ThemeMode.DARK
         self.page.bgcolor = "#0f172a"
@@ -102,7 +102,14 @@ class ICFESApp:
             border_radius=10
         )
 
-        main_col = ft.Column([gen_card, ft.Container(height=15), proc_card], spacing=20, alignment="center")
+        main_col = ft.Column(
+            [gen_card, ft.Container(height=15), proc_card], 
+            spacing=20, 
+            alignment="center",
+            scroll = ft.ScrollMode.AUTO,
+            expand = True
+        )
+        
         self.page.add(main_col)
 
     async def _on_csv(self, e):
